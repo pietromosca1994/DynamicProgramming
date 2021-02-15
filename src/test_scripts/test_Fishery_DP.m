@@ -34,7 +34,7 @@ prb.G=@(x)(0);                    % function handler    final cost function
 prb.J=@(inp, par)(fishery(inp, par));
 
 % options definition
-options.interp='round';   % str               interpolation method
+options.interp='interp1';   % str               interpolation method
 options.log=true;           % bool              logs intermidiate results
 options.verbose=false;       % bool              shows logs if true
 options.gN=[];              % array(n-dim)      final cost matrix
