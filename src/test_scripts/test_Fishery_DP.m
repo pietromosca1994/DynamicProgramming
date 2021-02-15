@@ -7,6 +7,10 @@ clear all;
 
 % Fishery Problem test
 
+% link resources 
+addpath('../');
+addpath('../benchmark_functions/');
+
 date='20210214';
 
 %% input definition
@@ -30,9 +34,9 @@ prb.G=@(x)(0);                    % function handler    final cost function
 prb.J=@(inp, par)(fishery(inp, par));
 
 % options definition
-options.interp='interp1';   % str               interpolation method
+options.interp='round';   % str               interpolation method
 options.log=true;           % bool              logs intermidiate results
-options.verbose=true;       % bool              shows logs if true
+options.verbose=false;       % bool              shows logs if true
 options.gN=[];              % array(n-dim)      final cost matrix
 
 %% Functionality test
@@ -103,7 +107,14 @@ figure();
 plot(dynamic_programming.time, dynamic_programming.X_opt);
 xlabel('Time');
 ylabel('State');
+ylim([dynamic_programming.DX(1), dynamic_programming.DX(end)]);
 title('Optimal State-Trajectory');
+
+figure();
+plot(dynamic_programming.time(1:end-1), dynamic_programming.log.elapsed_time);
+xlabel('Time');
+ylabel('Computational Time per Step [ms]');
+title('Computational Time per Time ');
 
 % save data
 Jtogo=dynamic_programming.Jtogo;

@@ -47,15 +47,16 @@ classdef DP<handle
             end
             
             if options.log==true
-              obj.log.jtogo=zeros(numel(obj.time), numel(obj.DX), numel(obj.DU));
-              obj.log.elapsed_time=zeros(numel(obj.time)-1);
+              obj.log.jtogo_t=zeros(numel(obj.time), numel(obj.DX), numel(obj.DU)); % array(time, n_states, n_inputs)  temporary cost to go
+              obj.log.elapsed_time=zeros(1, numel(obj.time)-1);                     % array(time)                      elapsed time per time step
+              obj.log.total_elapsed_time=0;                                         % float                            total elapsed time
             end
         end
         
         %% Function to compute the Jtogo for a time step
-        % T_step        time step
-        % prb           problem description
-        % options       problem options
+        % T_step        float       time step
+        % prb           struct      problem description
+        % options       struct      options sructure
         function compute_step(obj, T_step, prb, options)
             
             if options.verbose==true
@@ -63,13 +64,7 @@ classdef DP<handle
             end        
             
             % loop through the states
-            for i=1:numel(obj.DX)
-                
-                if options.verbose==true
-                  if mod(i, 50)==0
-                    disp(['[INFO] State', num2str(i)]);  
-                  end
-                end
+            for i=1:numel(obj.DX)               
                 
                 % loop through the inputs
                 for j=1:numel(obj.DU)
@@ -84,13 +79,11 @@ classdef DP<handle
                   % cost evaluation
                   [X(j), J(j), I(j), signals]=prb.J(inp, par);
                   
-                  if options.interp=='interp1'
+                  if strcmp(options.interp, 'interp1')
                     % interpolation on next cost-to-go vector
                     Jtogo_t(j)=J(j)+interp1(obj.DX, obj.Jtogo(T_step+1, :), X(j));
-                  
-                  
                   end
-                  
+                                    
                  [obj.Jtogo(T_step, i), idx]=min(Jtogo_t);
                  obj.u_opt(T_step, i)=obj.DU(idx);
                                 
@@ -98,19 +91,22 @@ classdef DP<handle
                 
                 % log result
                 if options.log==true
-                  obj.log.Jtogo(T_step, i, :)=Jtogo_t;
+                  obj.log.Jtogo_t(T_step, i, :)=Jtogo_t;
                 end
                 
             end
         end
       
       %% function for backpropagation 
-      % prb   struct
-      % 
+      % prb           struct      problem description
+      % options       struct      options structure
       function get_BP(obj, prb, options)
-
+        disp('[INFO] Started Dynamic Programming')
+        
+        % loop through time steps
         for T_step=numel(obj.time)-1:-1:1
           waitbar((numel(obj.time)-T_step)/numel(obj.time));
+
           
           t0 = clock (); % start time
           obj.compute_step(T_step, prb, options)
@@ -119,9 +115,14 @@ classdef DP<handle
           % log execution time
           if options.log==true
             obj.log.elapsed_time(T_step)=elapsed_time; 
-          end
-          
+          end          
         end
+        
+        if options.log==true
+            obj.log.total_elapsed_time=sum(obj.log.elapsed_time);
+            disp(['[INFO] Elapsed ', num2str(obj.log.total_elapsed_time) , ' s']);
+        end
+       
       end
       
       %% function for forward simulation
