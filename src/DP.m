@@ -28,17 +28,16 @@ classdef DP<handle
             obj.DX=linspace(grd.Xn.lo, grd.Xn.hi, grd.Nx);                        
             obj.DU=linspace(grd.Un.lo, grd.Un.hi, grd.Nu);
             
-            % initialize cost-to-go grid
+            % initialize cost-to-go grid to Inf value
             % scale to n dim
-            obj.Jtogo=zeros(numel(obj.time), grd.Nx);
-            % initialize  grid
+            obj.Jtogo=ones(numel(obj.time), grd.Nx)*prb.InfCost;
+            % initialize control grid
             obj.u_opt=zeros(size(obj.Jtogo));
             
             % initialize forward simulation
             obj.X_opt=zeros(size(obj.time));          
             
             % final cost initialization
-            % scale to ndim
             if isempty(options.gN)
              obj.Jtogo(end, (obj.DX>grd.XN.hi | obj.DX<grd.XN.lo))=prb.InfCost;
              obj.Jtogo(end, (obj.DX<grd.XN.hi & obj.DX>grd.XN.lo))=prb.G(obj.DX(obj.DX<grd.XN.hi & obj.DX>grd.XN.lo));           
@@ -126,11 +125,14 @@ classdef DP<handle
       end
       
       %% function for forward simulation
-      
+      % grd           struct     grid definition
+      % prb           struct      problem description
       function forward_sim(obj, grd, prb)
-        % loop through time forward
+        
+		% initial state initialization
         obj.X_opt(1)=grd.X0;
         
+		% loop through time forward
         for T_step=1:numel(obj.time)-1
           inp.X=obj.X_opt(T_step);
           inp.U=interp1(obj.DX, obj.u_opt(T_step, :), inp.X);
@@ -138,7 +140,14 @@ classdef DP<handle
           par=[];         
           [obj.X_opt(T_step+1), ~, ~, ~]=prb.J(inp, par);
         end
-        
+		
+		% check if final cost is between the boundaries specified
+		if obj.X_opt(end)<grd.XN.lo || obj.X_opt(end)>grd.XN.hi
+			disp('[WARNING] Final state NOT betweend Final State bounds');
+		else
+			disp('[INFO] Final State between Final State bounds');	
+		end
+		
       end
     
     end % end of methods
