@@ -1,6 +1,10 @@
 # DynamicProgramming
 
-Dynamic Programming Workframe
+Dynamic Programming Framework
+
+Features:
+- Univariate control
+- Not optimized for computational performance (vectorization and parallel computing)
 
 ## Rererences
 - *O. Sundstrom, D. Ambuhl, L. Guzzella (2008), "On Implementation of Dynamic Programming for Optimal Control Problems with Final State Constraints" Les Rencontres Scientifiques de l'IFP - Advances in Hybrid Powertrains - 25-26 November 2008 - Proceedings*
