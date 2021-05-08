@@ -15,43 +15,44 @@ date='20210214';
 
 %% input definition
 % grid definition
-grd.Nx=101;
-grd.Xn.lo=0;
-grd.Xn.hi=1000;
-grd.XN.lo=750;
-grd.XN.hi=1000;
-grd.Nu=11;
-grd.Un.lo=0;
-grd.Un.hi=10;
-grd.X0=500;
+grd.Nx=101;                       % float               number of grid points in the state grid
+grd.Xn.lo=0;                      % float               lower limit for each state
+grd.Xn.hi=1000;                   % float               upper limit for each state
+grd.XN.lo=750;                    % float               final state lower constraint
+grd.XN.hi=1000;                   % float               final state upper constarint
+grd.Nu=11;                        % float               number of grid points in input grid
+grd.Un.lo=0;                      % float               lower limit for each input
+grd.Un.hi=10;                     % float               upper limit for each input            
+grd.X0=500;                       % float               initial state
 
 % problem definition
-prb.Ts=1/5;                       % float               [day]
-prb.start_T=0.4;                  % float               [day]
-prb.end_T=200;                    % float               [day]
+prb.Ts=1/5;                       % float               sample time [day]
+prb.start_T=0.4;                  % float               start time[day]
+prb.end_T=200;                    % float               end time [day]
 prb.InfCost=1000;                 % float               infinite cost
+prb.W=[];                         % float               disturbances
 prb.G=@(x)(0);                    % function handler    final cost function
 prb.J=@(inp, par)(fishery(inp, par));
 
 % options definition
 options.interp='interp1';   % str               interpolation method
 options.log=true;           % bool              logs intermidiate results
-options.verbose=false;       % bool              shows logs if true
+options.verbose=false;      % bool              shows logs if true
 options.gN=[];              % array(n-dim)      final cost matrix
 
 %% Functionality test
 dynamic_programming=DP();
 dynamic_programming.init(grd, prb, options);
 
-T_step=1000;
+% T_step=1000;
 % test step
 %dynamic_programming.compute_step(T_step, prb, options);
 
 %test algorithm
-dynamic_programming.get_BP(prb, options)
+dynamic_programming.get_BP(options)
 
 % forward computation
-dynamic_programming.forward_sim(grd, prb);
+dynamic_programming.forward_sim();
 
 %% result plot
 % plot final cost array

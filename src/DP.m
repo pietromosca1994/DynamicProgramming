@@ -6,13 +6,17 @@
 classdef DP<handle
 
     properties
-        Jtogo;      % array(time, n_dim)      cost-to-go table            
-        u_opt;      % array(time, n_dim)      optimal policy
-        time;       % array(time)             time array
-        DX;         % array(n_states)         discrete states
-        DU;         % array(n_inputs)         discrete input
-        log;        % struct                  log
-        X_opt       % array(time, n_inputs)   optimal state trajectory
+        Jtogo;      % array(time, n_dim)          cost-to-go table            
+        u_opt;      % array(time, n_dim)          optimal policy
+        time;       % array(time)                 time array
+        DX;         % array(n_states)             discrete states
+        DU;         % array(n_inputs)             discrete input
+        W;          % array(time, n_disturbances)  distrubances 
+        log;        % struct                      log 
+        X_opt       % array(time, n_inputs)       optimal state trajectory
+        prb;
+        grd;
+        par;
     
     end % end of properties
     
@@ -24,13 +28,15 @@ classdef DP<handle
         % options       struct     options          
         
         function init(obj, grd, prb, options)
-            obj.time=prb.start_T:prb.Ts:prb.end_T;
-            obj.DX=linspace(grd.Xn.lo, grd.Xn.hi, grd.Nx);                        
-            obj.DU=linspace(grd.Un.lo, grd.Un.hi, grd.Nu);
-            
+            obj.prb=prb;
+            obj.grd=grd;
+            obj.time=obj.prb.start_T:obj.prb.Ts:obj.prb.end_T;
+            obj.DX=linspace(obj.grd.Xn.lo, obj.grd.Xn.hi, obj.grd.Nx);                        
+            obj.DU=linspace(obj.grd.Un.lo, obj.grd.Un.hi, obj.grd.Nu);
+                       
             % initialize cost-to-go grid to Inf value
             % scale to n dim
-            obj.Jtogo=ones(numel(obj.time), grd.Nx)*prb.InfCost;
+            obj.Jtogo=ones(numel(obj.time), obj.grd.Nx)*obj.prb.InfCost;
             % initialize control grid
             obj.u_opt=zeros(size(obj.Jtogo));
             
@@ -39,8 +45,8 @@ classdef DP<handle
             
             % final cost initialization
             if isempty(options.gN)
-             obj.Jtogo(end, (obj.DX>grd.XN.hi | obj.DX<grd.XN.lo))=prb.InfCost;
-             obj.Jtogo(end, (obj.DX<grd.XN.hi & obj.DX>grd.XN.lo))=prb.G(obj.DX(obj.DX<grd.XN.hi & obj.DX>grd.XN.lo));           
+             obj.Jtogo(end, (obj.DX>obj.grd.XN.hi | obj.DX<obj.grd.XN.lo))=obj.prb.InfCost;
+             obj.Jtogo(end, (obj.DX<obj.grd.XN.hi & obj.DX>obj.grd.XN.lo))=prb.G(obj.DX(obj.DX<obj.grd.XN.hi & obj.DX>obj.grd.XN.lo));           
             else
               obj.Jtogo=options.gN;
             end
@@ -56,11 +62,15 @@ classdef DP<handle
         % T_step        float       time step
         % prb           struct      problem description
         % options       struct      options sructure
-        function compute_step(obj, T_step, prb, options)
+        function compute_step(obj, T_step, options)
             
             if options.verbose==true
               disp(['[INFO] T_step:', num2str(T_step)]);
             end        
+            
+            if not(isempty(obj.W))
+              inp.W=obj.W(T_step, :);
+            end
             
             % loop through the states
             for i=1:numel(obj.DX)               
@@ -70,13 +80,11 @@ classdef DP<handle
                   % group inputs
                   inp.X=obj.DX(i);
                   inp.U=obj.DU(j);
-                  inp.Ts=prb.Ts;
-                  
-                  % parameter definition
-                  par=[];
+                  inp.Ts=obj.prb.Ts;
+                  par=[];                  
                   
                   % cost evaluation
-                  [X(j), J(j), I(j), signals]=prb.J(inp, par);
+                  [X(j), J(j), I(j), signals]=obj.prb.J(inp, par);
                   
                   if strcmp(options.interp, 'interp1')
                     % interpolation on next cost-to-go vector
@@ -99,16 +107,18 @@ classdef DP<handle
       %% function for backpropagation 
       % prb           struct      problem description
       % options       struct      options structure
-      function get_BP(obj, prb, options)
+      function get_BP(obj, options)
         disp('[INFO] Started Dynamic Programming')
         
+        h = waitbar (0, '0.00%');
         % loop through time steps
         for T_step=numel(obj.time)-1:-1:1
-          waitbar((numel(obj.time)-T_step)/numel(obj.time));
+          
+          waitbar((numel(obj.time)-T_step)/numel(obj.time), h, sprintf ('%.2f%%', 100*(numel(obj.time)-T_step)/numel(obj.time)));
 
           
           t0 = clock (); % start time
-          obj.compute_step(T_step, prb, options)
+          obj.compute_step(T_step, options)
           elapsed_time=etime (clock (), t0); % elapsed time 
           
           % log execution time
@@ -116,6 +126,9 @@ classdef DP<handle
             obj.log.elapsed_time(T_step)=elapsed_time; 
           end          
         end
+        
+        delete(h)
+        disp('[INFO] Backpropagation completed');
         
         if options.log==true
             obj.log.total_elapsed_time=sum(obj.log.elapsed_time);
@@ -127,26 +140,31 @@ classdef DP<handle
       %% function for forward simulation
       % grd           struct     grid definition
       % prb           struct      problem description
-      function forward_sim(obj, grd, prb)
+      function forward_sim(obj)
         
-		% initial state initialization
-        obj.X_opt(1)=grd.X0;
-        
-		% loop through time forward
+        % initial state initialization
+        obj.X_opt(1)=obj.grd.X0;
+            
+        % loop through time forward
         for T_step=1:numel(obj.time)-1
           inp.X=obj.X_opt(T_step);
           inp.U=interp1(obj.DX, obj.u_opt(T_step, :), inp.X);
-          inp.Ts=prb.Ts;
+          inp.Ts=obj.prb.Ts;
+          
+          if not(isempty(obj.W))
+            inp.W=obj.W(T_step, :);
+          end
+          
           par=[];         
-          [obj.X_opt(T_step+1), ~, ~, ~]=prb.J(inp, par);
+          [obj.X_opt(T_step+1), ~, ~, ~]=obj.prb.J(inp, par);
         end
-		
-		% check if final cost is between the boundaries specified
-		if obj.X_opt(end)<grd.XN.lo || obj.X_opt(end)>grd.XN.hi
-			disp('[WARNING] Final state NOT betweend Final State bounds');
-		else
-			disp('[INFO] Final State between Final State bounds');	
-		end
+        
+        % check if final cost is between the boundaries specified
+        if obj.X_opt(end)<obj.grd.XN.lo || obj.X_opt(end)>obj.grd.XN.hi
+          disp('[WARNING] Final state NOT betweend Final State bounds');
+        else
+          disp('[INFO] Final State between Final State bounds');	
+        end
 		
       end
     
