@@ -28,14 +28,14 @@ driving_cycle.init(p_driving_cycle, p_sim_env);
 %% input definition
 % grid definition
 grd.Nx=91;                        % float               number of grid points in the state grid
-grd.Xn.lo=5;                      % float               lower limit for each state
-grd.Xn.hi=95;                     % float               upper limit for each state
-grd.XN.lo=55;                     % float               final state lower constraint
-grd.XN.hi=65;                     % float               final state upper constarint
+grd.Xn.lo=0.05;                   % float               lower limit for each state
+grd.Xn.hi=0.95;                   % float               upper limit for each state
+grd.XN.lo=0.55;                   % float               final state lower constraint
+grd.XN.hi=0.65;                   % float               final state upper constarint
 grd.Nu=16;                        % float               number of grid points in input grid
 grd.Un.lo=-2;                     % float               lower limit for each input
 grd.Un.hi=1;                      % float               upper limit for each input            
-grd.X0=500;                       % float               initial state
+grd.X0=0.6;                       % float               initial state
 
 % problem definition
 prb.Ts=p_sim_env.Ts;                                                  % float               sampple time [day]
