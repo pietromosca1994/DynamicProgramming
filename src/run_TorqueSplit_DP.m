@@ -6,13 +6,9 @@
 clear all;
 
 % link resources 
-addpath('../');
-addpath('../benchmark_functions/');
-%VehicleModel_path=uigetdir('./', 'Select VehicleModel path');
-VehicleModel_path='C:\Users\pietr\Desktop\repos\VehicleModel\src\';
-addpath(VehicleModel_path)
+run('init_lib_DP.m');
 
-run('init_project.m');
+run('init_lib_VehicleModel.m');
 run('init_sim_env.m');
 run('init_driving_cycle.m');
 
@@ -22,7 +18,7 @@ vehicle=sim_system;
 vehicle.init(p_sim_env.Ts);
 % initialize driving cycle
 driving_cycle=driving_cycle;
-driving_cycle.init(p_driving_cycle, p_sim_env);
+driving_cycle.init(p_driving_cycle);
 
 
 %% input definition
@@ -30,8 +26,8 @@ driving_cycle.init(p_driving_cycle, p_sim_env);
 grd.Nx=91;                        % float               number of grid points in the state grid
 grd.Xn.lo=0.05;                   % float               lower limit for each state
 grd.Xn.hi=0.95;                   % float               upper limit for each state
-grd.XN.lo=0.55;                   % float               final state lower constraint
-grd.XN.hi=0.65;                   % float               final state upper constarint
+grd.XN.lo=0.59;                   % float               final state lower constraint
+grd.XN.hi=0.61;                   % float               final state upper constarint
 grd.Nu=16;                        % float               number of grid points in input grid
 grd.Un.lo=-2;                     % float               lower limit for each input
 grd.Un.hi=1;                      % float               upper limit for each input            

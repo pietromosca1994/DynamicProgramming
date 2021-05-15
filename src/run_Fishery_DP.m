@@ -8,8 +8,7 @@ clear all;
 % Fishery Problem test
 
 % link resources 
-addpath('../');
-addpath('../benchmark_functions/');
+run('init_project.m');
 
 date='20210214';
 
