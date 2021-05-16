@@ -16,10 +16,16 @@ run('init_driving_cycle.m');
 global vehicle
 vehicle=sim_system;
 vehicle.init(p_sim_env.Ts);
+vehicle.vehicle.log_flag=false;
+vehicle.EMG.log_flag=false;
+vehicle.gearbox.log_flag=false;
+vehicle.ICE.log_flag=false;
+vehicle.battery.log_flag=false;
+vehicle.T_split.log_flag=false;
+
 % initialize driving cycle
 driving_cycle=driving_cycle;
 driving_cycle.init(p_driving_cycle);
-
 
 %% input definition
 % grid definition
@@ -44,7 +50,7 @@ prb.W(:,2)=interp1(driving_cycle.time, driving_cycle.a, time);        % float   
 prb.W(:,3)=interp1(driving_cycle.time, driving_cycle.alpha, time);    % float               road gradient
 prb.W(:,4)=interp1(driving_cycle.time, driving_cycle.g, time);        % float               gear
 prb.G=@(x)(0);                                                        % function handler    final cost function
-prb.J=@(inp, par)(fishery(inp, par));                                 % function handler    problem definition   
+prb.J=@(inp, par)(TorqueSplit(inp, par));                                 % function handler    problem definition   
 
 % options definition
 options.interp='interp1';   % str               interpolation method
@@ -59,3 +65,79 @@ dynamic_programming.init(grd, prb, options);
 %test algorithm
 dynamic_programming.get_BP(options)
 
+% forward computation
+dynamic_programming.forward_sim(options);
+
+%% result plot
+% plot final cost array
+figure();
+
+subplot(3,1,1)
+plot(dynamic_programming.DX, dynamic_programming.Jtogo(end, :));
+xlabel('X');
+ylabel('Jtogo');
+title(['Final Cost to Go']);
+xticks(dynamic_programming.DX);
+grid on;
+
+% plot jtogo for one step
+step_Jtogo=size(dynamic_programming.Jtogo,1)-1;
+
+subplot(3,1,2)
+plot(dynamic_programming.DX, dynamic_programming.Jtogo(step_Jtogo, :));
+xlabel('X');
+ylabel('Jtogo');
+title(['Jtogo @', num2str(step_Jtogo)]);
+xticks(dynamic_programming.DX);
+grid on;
+
+% plot optimal input for one step
+step_u_opt=step_Jtogo;
+
+subplot(3,1,3)
+plot(dynamic_programming.DX, dynamic_programming.u_opt(step_u_opt, :));
+xlabel('X');
+ylabel('u_opt');
+title(['u_o_p_t @', num2str(step_u_opt)]);
+xticks(dynamic_programming.DX);
+grid on;
+
+%
+figure()
+subplot(2,1,1)
+contourf(dynamic_programming.time, dynamic_programming.DX,  dynamic_programming.Jtogo');
+colorbar;
+xlabel('Time');
+ylabel('State');
+title('J-to-go');
+
+subplot(2,1,2)
+contourf( dynamic_programming.time, dynamic_programming.DX, dynamic_programming.u_opt');
+colorbar;
+xlabel('Time');
+ylabel('State');
+title('u_o_p_t');
+
+figure();
+subplot(3,1,1)
+plot(dynamic_programming.time, prb.W(:,1));
+xlabel('Time');
+ylabel('State');
+
+subplot(3,1,2)
+plot(dynamic_programming.time, dynamic_programming.X_opt);
+xlabel('Time');
+ylabel('State');
+ylim([dynamic_programming.DX(1), dynamic_programming.DX(end)]);
+
+subplot(3,1,3)
+plot(dynamic_programming.time(1:end-1), dynamic_programming.log.u_opt_t);
+xlabel('Time');
+ylabel('U_{opt}');
+title('Optimal Input');
+
+figure();
+plot(dynamic_programming.time(1:end-1), dynamic_programming.log.elapsed_time);
+xlabel('Time');
+ylabel('Computational Time per Step [ms]');
+title('Computational Time per Time ');

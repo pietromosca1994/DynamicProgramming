@@ -6,14 +6,15 @@
 classdef DP<handle
 
     properties
-        Jtogo;      % array(time, n_dim)          cost-to-go table            
-        u_opt;      % array(time, n_dim)          optimal policy
-        time;       % array(time)                 time array
-        DX;         % array(n_states)             discrete states
-        DU;         % array(n_inputs)             discrete input
-        W;          % array(time, n_disturbances)  distrubances 
-        log;        % struct                      log 
-        X_opt       % array(time, n_inputs)       optimal state trajectory
+        Jtogo;      % array(time, n_states)                 cost-to-go table            
+        u_opt;      % array(time, n_states)                 optimal policy
+        time;       % array(time)                           time array
+        DX;         % array(n_states)                       discrete states
+        DU;         % array(n_inputs)                       discrete input
+        W;          % array(time, n_disturbances)           distrubances 
+        log;        % struct                                log 
+        X_opt;      % array(time, n_inputs)                 optimal state trajectory
+        
         prb;
         grd;
         par;
@@ -52,9 +53,10 @@ classdef DP<handle
             end
             
             if options.log==true
-              obj.log.jtogo_t=zeros(numel(obj.time), numel(obj.DX), numel(obj.DU)); % array(time, n_states, n_inputs)  temporary cost to go
+              obj.log.Jtogo_t=zeros(numel(obj.time), numel(obj.DX), numel(obj.DU)); % array(time, n_states, n_inputs)  temporary cost to go
               obj.log.elapsed_time=zeros(1, numel(obj.time)-1);                     % array(time)                      elapsed time per time step
-              obj.log.total_elapsed_time=0;                                         % float                            total elapsed time
+              obj.log.total_elapsed_time=0;                                       % float                            total elapsed time
+              obj.log.u_opt_t=zeros(1, numel(obj.time)-1);
             end
         end
         
@@ -81,6 +83,8 @@ classdef DP<handle
                   inp.X=obj.DX(i);
                   inp.U=obj.DU(j);
                   inp.Ts=obj.prb.Ts;
+                  inp.W=obj.prb.W(T_step, :);
+                  
                   par=[];                  
                   
                   % cost evaluation
@@ -140,7 +144,7 @@ classdef DP<handle
       %% function for forward simulation
       % grd           struct     grid definition
       % prb           struct      problem description
-      function forward_sim(obj)
+      function forward_sim(obj, options)
         
         % initial state initialization
         obj.X_opt(1)=obj.grd.X0;
@@ -150,13 +154,15 @@ classdef DP<handle
           inp.X=obj.X_opt(T_step);
           inp.U=interp1(obj.DX, obj.u_opt(T_step, :), inp.X);
           inp.Ts=obj.prb.Ts;
-          
-          if not(isempty(obj.W))
-            inp.W=obj.W(T_step, :);
-          end
+          inp.W=obj.prb.W(T_step, :);
           
           par=[];         
           [obj.X_opt(T_step+1), ~, ~, ~]=obj.prb.J(inp, par);
+          
+          if options.log==true
+            obj.log.u_opt_t(T_step)=inp.U;
+          end
+          
         end
         
         % check if final cost is between the boundaries specified
