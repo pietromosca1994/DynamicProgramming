@@ -8,7 +8,7 @@ clear all;
 % Fishery Problem test
 
 % link resources 
-run('init_project.m');
+run('init_lib_DP.m');
 
 date='20210214';
 

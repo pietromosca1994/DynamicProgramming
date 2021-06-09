@@ -50,7 +50,7 @@ prb.W(:,2)=interp1(driving_cycle.time, driving_cycle.a, time);        % float   
 prb.W(:,3)=interp1(driving_cycle.time, driving_cycle.alpha, time);    % float               road gradient
 prb.W(:,4)=interp1(driving_cycle.time, driving_cycle.g, time);        % float               gear
 prb.G=@(x)(0);                                                        % function handler    final cost function
-prb.J=@(inp, par)(TorqueSplit(inp, par));                                 % function handler    problem definition   
+prb.J=@(inp, par)(TorqueSplit(inp, par));                             % function handler    problem definition   
 
 % options definition
 options.interp='interp1';   % str               interpolation method
