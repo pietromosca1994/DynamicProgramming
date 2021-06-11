@@ -51,7 +51,7 @@ dynamic_programming.init(grd, prb, options);
 dynamic_programming.get_BP(options)
 
 % forward computation
-dynamic_programming.forward_sim();
+dynamic_programming.forward_sim(options);
 
 %% result plot
 % plot final cost array

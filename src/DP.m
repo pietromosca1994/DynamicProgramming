@@ -83,7 +83,11 @@ classdef DP<handle
                   inp.X=obj.DX(i);
                   inp.U=obj.DU(j);
                   inp.Ts=obj.prb.Ts;
-                  inp.W=obj.prb.W(T_step, :);
+                  if isempty(obj.prb.W)
+                    inp.W=[];
+                  else
+                    inp.W=obj.prb.W(T_step, :);
+                  end
                   
                   par=[];                  
                   
@@ -154,7 +158,11 @@ classdef DP<handle
           inp.X=obj.X_opt(T_step);
           inp.U=interp1(obj.DX, obj.u_opt(T_step, :), inp.X);
           inp.Ts=obj.prb.Ts;
-          inp.W=obj.prb.W(T_step, :);
+          if isempty(obj.prb.W) 
+            inp.W=[];
+          else          
+            inp.W=obj.prb.W(T_step, :);
+          end
           
           par=[];         
           [obj.X_opt(T_step+1), ~, ~, ~]=obj.prb.J(inp, par);
