@@ -7,5 +7,6 @@ Features:
 - Not optimized for computational performance (vectorization and parallel computing)
 
 ## Rererences
-- *O. Sundstrom, D. Ambuhl, L. Guzzella (2008), "On Implementation of Dynamic Programming for Optimal Control Problems with Final State Constraints" Les Rencontres Scientifiques de l'IFP - Advances in Hybrid Powertrains - 25-26 November 2008 - Proceedings*
-- *O. Sundstrom, L. Guzzella (2009), "A Generic Dynamic Programming Matlab Function" 18th IEEE International Conference on Control Applications Part of 2009 IEEE Multi-conference on Systems and Control Saint Petersburg, Russia, July 8-10, 2009* 
+- *Sundstrom, O.; Guzzella, L., "A generic dynamic programming Matlab function," Control Applications, (CCA) & Intelligent Control, (ISIC), 2009 IEEE , vol., no., pp.1625,1630, 8-10 July 2009*
+- *Sundström, O;, Ambühl, D.; Guzzella, L., "On Implementation of Dynamic Programming for Optimal Control Problems with Final State Constraints", Oil Gas Sci. Technol. – Rev. IFP 65 (1) 91-102, 2010*
+- *Elbert, P.; Ebbesen, S.; Guzzella, L., "Implementation of Dynamic Programming for - Dimensional Optimal Control Problems With Final State Constraints," Control Systems Technology, IEEE Transactions on , vol.21, no.3, pp.924,931, May 2013* 
