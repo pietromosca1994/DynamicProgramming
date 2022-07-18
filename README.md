@@ -1,6 +1,6 @@
 # DynamicProgramming
 
-Dynamic Programming Framework
+Dynamic Programming Framework for Matlab 
 
 Features:
 - Univariate control
